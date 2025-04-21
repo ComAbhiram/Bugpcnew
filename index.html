@@ -1,0 +1,2050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug Priority Classification System - Intersmart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #fbd002;
+            --secondary-color: #808080;
+            --accent-color: #fbd002;
+            --background-color: #1a1a1a;
+            --white: #ffffff;
+            --text-color: #e0e0e0;
+            --border-color: #333333;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --hover-color: #e6c002;
+            --card-bg: #2d2d2d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(to bottom, #2d2d2d, #1a1a1a);
+            box-shadow: var(--shadow);
+            padding: 1rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            height: 60px;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .logo {
+            height: 32px;
+            width: auto;
+        }
+
+        .site-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+            margin: 0 auto;
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        nav ul {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+            flex: 1;
+            justify-content: flex-end;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+        }
+
+        nav a.active {
+            background-color: var(--primary-color);
+            color: black;
+        }
+
+        nav a:hover:not(.active) {
+            background-color: var(--background-color);
+            color: var(--primary-color);
+        }
+
+        main {
+            flex: 1;
+            padding: 3rem 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        h1 {
+            text-align: center;
+            color: transparent;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .selector {
+            background: linear-gradient(to bottom right, #2d2d2d, #1a1a1a);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .select-wrapper {
+            position: relative;
+            min-width: 280px;
+        }
+
+        .select-wrapper i {
+            position: absolute;
+            top: 50%;
+            left: 1rem;
+            transform: translateY(-50%);
+            color: var(--primary-color);
+            pointer-events: none;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            font-size: 0.95rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            background-color: #2d2d2d;
+            color: var(--text-color);
+            cursor: pointer;
+            appearance: none;
+            transition: all 0.2s ease;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fbd002' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 12px;
+        }
+
+        select:hover {
+            border-color: var(--primary-color);
+            background-color: #333333;
+        }
+
+        select:focus {
+            outline: none;
+            background-color: #333333;
+        }
+
+        #bugList {
+            background-color: #2d2d2d;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            display: none;
+            margin-top: 2rem;
+        }
+
+        #bugList h2 {
+            padding: 1.5rem;
+            background-color: #1a1a1a;
+            color: var(--text-color);
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .bug-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .bug-table th {
+            background-color: #1a1a1a;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .bug-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .bug-table tr:hover td {
+            background-color: #333333;
+        }
+
+        .priority-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background-color: var(--primary-color);
+            color: #1a1a1a;
+        }
+
+        .no-bugs {
+            padding: 3rem;
+            text-align: center;
+            color: var(--secondary-color);
+            font-size: 0.95rem;
+        }
+
+        footer {
+            background: linear-gradient(to top, #2d2d2d, #1a1a1a);
+            padding: 1rem 0;
+            position: relative;
+            height: auto;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .footer-info {
+            flex: 1;
+        }
+
+        .footer-info p {
+            margin: 0.25rem 0;
+        }
+
+        .footer-info h3 {
+            margin: 0.25rem 0;
+        }
+
+        .qa-team {
+            flex: 1;
+            text-align: center;
+        }
+
+        .qa-team .team-title {
+            color: var(--text-color);
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .qa-members {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .qa-members a {
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #2d2d2d;
+            border: 1px solid var(--border-color);
+            width: 180px;
+            justify-content: center;
+        }
+
+        .qa-members a:hover {
+            color: #1a1a1a;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .qa-members a::before {
+            content: '\f0e0';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+        }
+
+        .qa-members a:hover::before {
+            color: var(--text-color);
+        }
+
+        .contact-info {
+            flex: 1;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-end;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 1rem;
+            margin-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--secondary-color);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                max-width: 95%;
+            }
+            
+            .footer-content {
+                padding: 0 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .logo-container {
+                justify-content: center;
+            }
+
+            nav ul {
+                justify-content: center;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+                margin-bottom: 1.5rem;
+                padding: 0 1rem;
+            }
+
+            .selector {
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .select-wrapper {
+                width: 100%;
+                min-width: unset;
+            }
+
+            select {
+                width: 100%;
+                font-size: 0.9rem;
+            }
+
+            .bug-table {
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .bug-table th,
+            .bug-table td {
+                padding: 0.75rem 1rem;
+                min-width: 120px;
+                white-space: normal;
+                word-break: break-word;
+            }
+
+            .bug-table td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: var(--card-bg);
+                z-index: 1;
+            }
+
+            .bug-table tr:hover td:first-child {
+                background-color: #333333;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+                padding: 0 1rem;
+            }
+
+            .footer-info, .qa-team, .contact-info {
+                width: 100%;
+                align-items: center;
+            }
+
+            .contact-info {
+                text-align: center;
+                align-items: center;
+            }
+
+            .social-links {
+                justify-content: center;
+                margin-top: 0.5rem;
+            }
+
+            .qa-members a {
+                width: 100%;
+                max-width: 220px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .site-title {
+                font-size: 1.1rem;
+            }
+
+            .selector {
+                padding: 0.75rem;
+            }
+
+            .bug-table th,
+            .bug-table td {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.9rem;
+            }
+
+            .priority-badge {
+                padding: 0.2rem 0.5rem;
+                font-size: 0.7rem;
+            }
+
+            .footer-info h3 {
+                font-size: 1.25rem;
+            }
+
+            .contact-info a {
+                font-size: 0.9rem;
+            }
+
+            footer {
+                padding: 1rem 0;
+            }
+
+            .footer-content {
+                gap: 0.75rem;
+            }
+
+            .qa-members a {
+                font-size: 0.85rem;
+                padding: 0.4rem;
+            }
+
+            .footer-bottom {
+                margin-top: 0.75rem;
+                padding-top: 0.75rem;
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        select, 
+        a,
+        button {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            select,
+            textarea,
+            input {
+                font-size: 16px;
+            }
+        }
+
+        .bug-list-container {
+            position: relative;
+            margin: 0 -1rem;
+            padding: 0 1rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        select:focus,
+        a:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        .company {
+            color: var(--primary-color);
+        }
+
+        .contact-info a:hover {
+            color: var(--primary-color);
+        }
+
+        .social-links a:hover {
+            color: var(--primary-color);
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--hover-color);
+        }
+
+        nav a {
+            color: var(--text-color);
+        }
+
+        nav a:hover:not(.active) {
+            color: var(--primary-color);
+        }
+
+        .qa-members a {
+            color: var(--text-color);
+        }
+
+        .qa-members a:hover {
+            color: #1a1a1a;
+        }
+
+        .contact-info a {
+            color: var(--text-color);
+        }
+
+        .contact-info a:hover {
+            color: var(--primary-color);
+        }
+
+        .social-links a {
+            color: var(--text-color);
+        }
+
+        .social-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .contact-info a i,
+        .social-links a i {
+            color: var(--primary-color);
+        }
+
+        .contact-info a:hover i,
+        .social-links a:hover i {
+            color: var(--hover-color);
+        }
+
+        .custom-dropdown {
+            position: relative;
+            min-width: 280px;
+        }
+
+        .dropdown-header {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background-color: #2d2d2d;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .dropdown-header:hover {
+            border-color: var(--primary-color);
+            background-color: #333333;
+        }
+
+        .dropdown-header i {
+            color: var(--primary-color);
+            margin-right: 0.75rem;
+        }
+
+        .dropdown-header span {
+            flex: 1;
+            color: var(--text-color);
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .dropdown-header::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-left: 0.5rem;
+            transition: transform 0.2s ease;
+        }
+
+        .dropdown-header.open::after {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-options {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            left: 0;
+            right: 0;
+            background-color: #2d2d2d;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            min-width: 0;
+        }
+
+        .dropdown-options.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-search {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            background-color: #2d2d2d;
+            z-index: 1;
+        }
+
+        .dropdown-search input {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: #1a1a1a;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        .dropdown-search input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(251, 208, 2, 0.2);
+        }
+
+        .dropdown-option {
+            padding: 0.75rem 1rem;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: normal;
+            word-break: break-word;
+            width: 100%;
+        }
+
+        .dropdown-option:hover {
+            background-color: #333333;
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .dropdown-option.selected {
+            background-color: var(--primary-color);
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+
+        .dropdown-option.selected::before {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: #1a1a1a;
+        }
+
+        select {
+            display: none;
+        }
+
+        .selector {
+            gap: 1rem;
+        }
+
+        .dropdown-options::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .dropdown-options::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 4px;
+        }
+
+        .dropdown-options::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .dropdown-options::-webkit-scrollbar-thumb:hover {
+            background: var(--hover-color);
+        }
+
+        @media (max-width: 768px) {
+            .custom-dropdown {
+                width: 100%;
+            }
+
+            .dropdown-options {
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                max-height: 50vh;
+                border-radius: 1rem 1rem 0 0;
+                transform: translateY(100%);
+            }
+
+            .dropdown-options.show {
+                transform: translateY(0);
+            }
+
+            .dropdown-option {
+                padding: 1rem;
+            }
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            padding-top: 60px;
+            position: relative;
+            flex: 1;
+            flex-direction: column;
+            min-height: 100%;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(to bottom, #2d2d2d, #1a1a1a);
+            padding: 1.5rem;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            border-right: 1px solid var(--border-color);
+            z-index: 100;
+            height: calc(100vh - 60px);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+            padding-bottom: 200px;
+            min-height: calc(100vh - 60px);
+            flex: 1;
+        }
+
+        .priority-menu {
+            margin-bottom: 2rem;
+        }
+
+        .priority-item {
+            padding: 0.75rem 1rem;
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .priority-item:hover {
+            background-color: #333333;
+            color: var(--primary-color);
+        }
+
+        .priority-item.active {
+            background-color: var(--primary-color);
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+
+        .priority-item i {
+            color: var(--primary-color);
+        }
+
+        .priority-item.active i {
+            color: #1a1a1a;
+        }
+
+        .modules-menu {
+            margin-top: 1rem;
+            padding-left: 1rem;
+        }
+
+        .module-item {
+            padding: 0.5rem 1rem;
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 0.5rem;
+            margin-bottom: 0.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .module-item:hover {
+            background-color: #333333;
+            color: var(--primary-color);
+        }
+
+        .module-item.active {
+            background-color: var(--primary-color);
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+
+        .bug-table-container {
+            background-color: #2d2d2d;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .table-header {
+            padding: 1rem;
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bug-type-switch {
+            display: flex;
+            gap: 0.5rem;
+            background-color: #333333;
+            padding: 0.25rem;
+            border-radius: 0.5rem;
+        }
+
+        .bug-type-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .bug-type-btn.active {
+            background-color: var(--primary-color);
+            color: #1a1a1a;
+        }
+
+        .bug-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .bug-table th {
+            background-color: #1a1a1a;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .bug-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .bug-table th, .bug-table td {
+            text-align: left;
+            vertical-align: middle;
+            width: auto;
+        }
+
+        .bug-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .copy-btn {
+            background-color: #333333;
+            color: var(--text-color);
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background-color: var(--primary-color);
+            color: #1a1a1a;
+        }
+
+        .search-container {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background-color: #2d2d2d;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            color: var(--text-color);
+            font-size: 0.95rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .bug-table th.hidden, .bug-table td.hidden {
+            display: none;
+        }
+
+        .menu-toggle {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                padding-top: 120px;
+            }
+
+            header {
+                height: auto;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 1000;
+                background: var(--background-color);
+                transform: translateY(-100%);
+                transition: transform 0.3s ease-in-out;
+            }
+
+            .sidebar.open {
+                transform: translateY(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+                min-height: auto;
+            }
+
+            footer {
+                position: relative;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .menu-toggle {
+                display: block;
+                position: fixed;
+                top: 1rem;
+                right: 1rem;
+                z-index: 1100;
+                background: var(--primary-color);
+                color: var(--background-color);
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 0.375rem;
+                cursor: pointer;
+                font-size: 1rem;
+            }
+        }
+
+        .modal {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
+        .modal-content {
+            background-color: #2d2d2d;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-md);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .modal-content p {
+            color: var(--text-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .details-btn {
+            background-color: #2d2d2d;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-height: 36px;
+        }
+
+        .details-btn:hover {
+            background-color: var(--primary-color);
+            color: #1a1a1a;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .details-btn:active {
+            transform: translateY(0);
+        }
+
+        .details-btn::before {
+            content: '\f129';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            font-size: 0.9rem;
+        }
+
+        .details-btn:hover::before {
+            color: #1a1a1a;
+        }
+
+        @media (max-width: 768px) {
+            .details-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.85rem;
+                min-height: 32px;
+            }
+        }
+
+        .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 26, 26, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .loader-container.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--primary-color);
+            border-left-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: relative;
+        }
+
+        .spinner::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border: 4px solid transparent;
+            border-right-color: var(--primary-color);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: spin 0.5s linear infinite reverse;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background-color: #2d2d2d;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            background-color: var(--primary-color);
+            color: #1a1a1a;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .modal-content label {
+            color: var(--text-color);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .modal-content input,
+        .modal-content select {
+            padding: 0.5rem;
+            background-color: #1a1a1a;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            color: var(--text-color);
+            font-size: 0.9rem;
+            display: block;
+        }
+
+        .modal-content input:focus,
+        .modal-content select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(251, 208, 2, 0.2);
+        }
+
+        .modal-content button[type="submit"] {
+            background-color: var(--primary-color);
+            color: #1a1a1a;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .modal-content button[type="submit"]:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            color: #ff4d4d;
+            font-size: 0.85rem;
+            text-align: center;
+            display: none;
+        }
+
+        .modal-content .delete-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .modal-content .delete-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-content .delete-option input[type="radio"] {
+            accent-color: var(--primary-color);
+        }
+
+        .modal-content .delete-option select {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="loader-container">
+        <div class="spinner"></div>
+    </div>
+    <header>
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="images/logo.png" alt="Intersmart Logo" class="logo">
+                <span class="site-title">Bug Priority Classification System</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="mailto:abhiram@intersmart.in" class="active">Contact</a></li>
+                    <li><a href="https://intersmartqa.github.io/QATabs/" target="_blank">QA Tabs</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <button class="menu-toggle">Menu</button>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="priority-menu">
+                <div class="priority-item active" data-priority="P0">
+                    <i class="fas fa-exclamation-circle"></i>
+                    P0 - Critical Impact
+                </div>
+                <div class="priority-item" data-priority="P1">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    P1 - High Impact
+                </div>
+                <div class="priority-item" data-priority="P2">
+                    <i class="fas fa-exclamation"></i>
+                    P2 - Medium Impact
+                </div>
+                <div class="priority-item" data-priority="P3">
+                    <i class="fas fa-info-circle"></i>
+                    P3 - Low Impact
+                </div>
+                <div class="priority-item" data-priority="P4">
+                    <i class="fas fa-info"></i>
+                    P4 - Minimal Impact
+                </div>
+            </div>
+            <div class="modules-menu">
+                <div class="module-item" data-module="Login">Login</div>
+                <div class="module-item" data-module="Home">Home</div>
+                <div class="module-item" data-module="Dashboard">Dashboard</div>
+                <div class="module-item" data-module="Profile">Profile</div>
+                <div class="module-item" data-module="Settings">Settings</div>
+                <div class="module-item" data-module="Reports">Reports</div>
+                <div class="module-item" data-module="Admin">Admin</div>
+                <div class="module-item" data-module="Set">Set</div>
+                <div class="module-item" data-module="Header">Header</div>
+                <div class="module-item" data-module="Menu">Menu</div>
+                <div class="module-item" data-module="Contact Forms">Contact Forms</div>
+                <div class="module-item" data-module="Slider">Slider</div>
+                <div class="module-item" data-module="Wishlist">Wishlist</div>
+                <div class="module-item" data-module="Cart">Cart</div>
+                <div class="module-item" data-module="Search">Search</div>
+                <div class="module-item" data-module="Footer">Footer</div>
+                <div class="module-item" data-module="OTP">OTP</div>
+                <div class="module-item" data-module="Sort">Sort</div>
+                <div class="module-item" data-module="Breadcrumbs">Breadcrumbs</div>
+                <div class="module-item" data-module="Alerts">Alerts</div>
+                <div class="module-item" data-module="Products">Products</div>
+                <div class="module-item" data-module="Filter">Filter</div>
+                <div class="module-item" data-module="Responsive">Responsive</div>
+                <div class="module-item" data-module="Validation">Validation</div>
+                <div class="module-item" data-module="All Forms">All Forms</div>
+                <div class="module-item" data-module="Crawl">Crawl</div>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="action-buttons">
+                <button class="action-btn" id="addBugBtn"><i class="fas fa-plus"></i> Add Bug</button>
+                <button class="action-btn" id="editBugBtn"><i class="fas fa-edit"></i> Edit Bug</button>
+                <button class="action-btn" id="deleteBugsBtn"><i class="fas fa-trash"></i> Mass Delete Bugs</button>
+            </div>
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Search by Bug ID..." id="bugIdSearch">
+            </div>
+            <div class="bug-table-container">
+                <div class="table-header">
+                    <h2>Bug Classification Results</h2>
+                    <div class="bug-type-switch">
+                        <div class="bug-type-btn active" data-type="all">All</div>
+                        <div class="bug-type-btn" data-type="HTML/UI">HTML/UI</div>
+                        <div class="bug-type-btn" data-type="Functional">Functional</div>
+                    </div>
+                </div>
+                <table class="bug-table">
+                    <thead>
+                        <tr>
+                            <th>Bug ID</th>
+                            <th>Bug Name</th>
+                            <th>Type</th>
+                            <th>Module</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bugItems"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for displaying bug details -->
+    <div id="bugDetailsModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-btn">×</button>
+            <h2>Bug Details</h2>
+            <p id="bugDetailsText"></p>
+        </div>
+    </div>
+
+    <!-- Modal for adding a new bug -->
+    <div id="addBugModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-btn">×</button>
+            <h2>Add New Bug</h2>
+            <form id="addBugForm">
+                <label for="bugId">Bug ID (optional)</label>
+                <input type="text" id="bugId" name="bugId" placeholder="Enter custom Bug ID or leave blank">
+
+                <label for="bugName">Bug Name</label>
+                <input type="text" id="bugName" name="bugName" required>
+
+                <label for="bugPriority">Priority</label>
+                <select id="bugPriority" name="bugPriority" required>
+                    <option value="P0">P0 - Critical Impact</option>
+                    <option value="P1">P1 - High Impact</option>
+                    <option value="P2">P2 - Medium Impact</option>
+                    <option value="P3">P3 - Low Impact</option>
+                    <option value="P4">P4 - Minimal Impact</option>
+                </select>
+
+                <label for="bugType">Type</label>
+                <select id="bugType" name="bugType" required>
+                    <option value="HTML/UI">HTML/UI</option>
+                    <option value="Functional">Functional</option>
+                </select>
+
+                <label for="bugModule">Module</label>
+                <select id="bugModule" name="bugModule" required>
+                    <option value="Login">Login</option>
+                    <option value="Home">Home</option>
+                    <option value="Dashboard">Dashboard</option>
+                    <option value="Profile">Profile</option>
+                    <option value="Settings">Settings</option>
+                    <option value="Reports">Reports</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Set">Set</option>
+                    <option value="Header">Header</option>
+                    <option value="Menu">Menu</option>
+                    <option value="Contact Forms">Contact Forms</option>
+                    <option value="Slider">Slider</option>
+                    <option value="Wishlist">Wishlist</option>
+                    <option value="Cart">Cart</option>
+                    <option value="Search">Search</option>
+                    <option value="Footer">Footer</option>
+                    <option value="OTP">OTP</option>
+                    <option value="Sort">Sort</option>
+                    <option value="Breadcrumbs">Breadcrumbs</option>
+                    <option value="Alerts">Alerts</option>
+                    <option value="Products">Products</option>
+                    <option value="Filter">Filter</option>
+                    <option value="Responsive">Responsive</option>
+                    <option value="Validation">Validation</option>
+                    <option value="All Forms">All Forms</option>
+                    <option value="Crawl">Crawl</option>
+                </select>
+
+                <p class="error-message" id="addBugError"></p>
+                <button type="submit">Add Bug</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for editing an existing bug -->
+    <div id="editBugModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-btn">×</button>
+            <h2>Edit Bug</h2>
+            <form id="editBugForm">
+                <label for="editBugSearch">Search Bug by ID</label>
+                <input type="text" id="editBugSearch" name="editBugSearch" placeholder="Enter Bug ID" required>
+
+                <label for="editBugName">Bug Name</label>
+                <input type="text" id="editBugName" name="editBugName" required>
+
+                <label for="editBugPriority">Priority</label>
+                <select id="editBugPriority" name="editBugPriority" required>
+                    <option value="P0">P0 - Critical Impact</option>
+                    <option value="P1">P1 - High Impact</option>
+                    <option value="P2">P2 - Medium Impact</option>
+                    <option value="P3">P3 - Low Impact</option>
+                    <option value="P4">P4 - Minimal Impact</option>
+                </select>
+
+                <label for="editBugType">Type</label>
+                <select id="editBugType" name="editBugType" required>
+                    <option value="HTML/UI">HTML/UI</option>
+                    <option value="Functional">Functional</option>
+                </select>
+
+                <label for="editBugModule">Module</label>
+                <select id="editBugModule" name="editBugModule" required>
+                    <option value="Login">Login</option>
+                    <option value="Home">Home</option>
+                    <option value="Dashboard">Dashboard</option>
+                    <option value="Profile">Profile</option>
+                    <option value="Settings">Settings</option>
+                    <option value="Reports">Reports</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Set">Set</option>
+                    <option value="Header">Header</option>
+                    <option value="Menu">Menu</option>
+                    <option value="Contact Forms">Contact Forms</option>
+                    <option value="Slider">Slider</option>
+                    <option value="Wishlist">Wishlist</option>
+                    <option value="Cart">Cart</option>
+                    <option value="Search">Search</option>
+                    <option value="Footer">Footer</option>
+                    <option value="OTP">OTP</option>
+                    <option value="Sort">Sort</option>
+                    <option value="Breadcrumbs">Breadcrumbs</option>
+                    <option value="Alerts">Alerts</option>
+                    <option value="Products">Products</option>
+                    <option value="Filter">Filter</option>
+                    <option value="Responsive">Responsive</option>
+                    <option value="Validation">Validation</option>
+                    <option value="All Forms">All Forms</option>
+                    <option value="Crawl">Crawl</option>
+                </select>
+
+                <p class="error-message" id="editBugError"></p>
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for mass deleting bugs -->
+    <div id="deleteBugsModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-btn">×</button>
+            <h2>Mass Delete Bugs</h2>
+            <form id="deleteBugsForm">
+                <div class="delete-options">
+                    <div class="delete-option">
+                        <input type="radio" id="deleteByModule" name="deleteType" value="module" required>
+                        <label for="deleteByModule">Delete by Module</label>
+                        <select id="deleteModuleSelect" name="deleteModuleSelect" disabled>
+                            <option value="">Select Module</option>
+                            <option value="Login">Login</option>
+                            <option value="Home">Home</option>
+                            <option value="Dashboard">Dashboard</option>
+                            <option value="Profile">Profile</option>
+                            <option value="Settings">Settings</option>
+                            <option value="Reports">Reports</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Set">Set</option>
+                            <option value="Header">Header</option>
+                            <option value="Menu">Menu</option>
+                            <option value="Contact Forms">Contact Forms</option>
+                            <option value="Slider">Slider</option>
+                            <option value="Wishlist">Wishlist</option>
+                            <option value="Cart">Cart</option>
+                            <option value="Search">Search</option>
+                            <option value="Footer">Footer</option>
+                            <option value="OTP">OTP</option>
+                            <option value="Sort">Sort</option>
+                            <option value="Breadcrumbs">Breadcrumbs</option>
+                            <option value="Alerts">Alerts</option>
+                            <option value="Products">Products</option>
+                            <option value="Filter">Filter</option>
+                            <option value="Responsive">Responsive</option>
+                            <option value="Validation">Validation</option>
+                            <option value="All Forms">All Forms</option>
+                            <option value="Crawl">Crawl</option>
+                        </select>
+                    </div>
+                    <div class="delete-option">
+                        <input type="radio" id="deleteByPriority" name="deleteType" value="priority">
+                        <label for="deleteByPriority">Delete by Priority</label>
+                        <select id="deletePrioritySelect" name="deletePrioritySelect" disabled>
+                            <option value="">Select Priority</option>
+                            <option value="P0">P0 - Critical Impact</option>
+                            <option value="P1">P1 - High Impact</option>
+                            <option value="P2">P2 - Medium Impact</option>
+                            <option value="P3">P3 - Low Impact</option>
+                            <option value="P4">P4 - Minimal Impact</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="error-message" id="deleteBugsError"></p>
+                <button type="submit">Delete Bugs</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const SHEETDB_API_URL = 'https://sheetdb.io/api/v1/lvcb5klydqpz3'; // Replace with your actual SheetDB API URL
+
+            const bugItems = document.getElementById('bugItems');
+            const bugDetailsModal = document.getElementById('bugDetailsModal');
+            const bugDetailsText = document.getElementById('bugDetailsText');
+            const addBugModal = document.getElementById('addBugModal');
+            const editBugModal = document.getElementById('editBugModal');
+            const deleteBugsModal = document.getElementById('deleteBugsModal');
+            const addBugForm = document.getElementById('addBugForm');
+            const editBugForm = document.getElementById('editBugForm');
+            const deleteBugsForm = document.getElementById('deleteBugsForm');
+            const addBugBtn = document.getElementById('addBugBtn');
+            const editBugBtn = document.getElementById('editBugBtn');
+            const deleteBugsBtn = document.getElementById('deleteBugsBtn');
+            const closeBtns = document.querySelectorAll('.close-btn');
+            const searchInput = document.getElementById('bugIdSearch');
+            const loader = document.querySelector('.loader-container');
+            const addBugError = document.getElementById('addBugError');
+            const editBugError = document.getElementById('editBugError');
+            const deleteBugsError = document.getElementById('deleteBugsError');
+
+            let currentPriority = 'P0';
+            let currentBugType = 'all';
+            let currentModule = 'all';
+
+            function showLoader() {
+                loader.classList.add('show');
+            }
+
+            function hideLoader() {
+                loader.classList.remove('show');
+            }
+
+            async function fetchBugs() {
+                try {
+                    showLoader();
+                    const response = await fetch(SHEETDB_API_URL);
+                    if (!response.ok) throw new Error('Failed to fetch bugs');
+                    const data = await response.json();
+                    
+                    // Transform the data to match our internal format
+                    return data.map(item => ({
+                        id: item["Bug ID"],
+                        name: item["Bug Name"],
+                        priority: item["Priority"],
+                        type: item["Type"],
+                        module: item["Module"]
+                    }));
+                } catch (error) {
+                    console.error('Error fetching bugs:', error);
+                    return [];
+                } finally {
+                    hideLoader();
+                }
+            }
+
+            function updateBugList(bugs) {
+                bugItems.innerHTML = '';
+                bugs.forEach(bug => {
+                    if (currentPriority !== 'all' && bug.priority !== currentPriority) return;
+                    if (currentBugType !== 'all' && bug.type !== currentBugType) return;
+                    if (currentModule !== 'all' && bug.module.toLowerCase() !== currentModule.toLowerCase()) return;
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${bug.id || 'N/A'}</td>
+                        <td>${bug.name || 'Unnamed'}</td>
+                        <td>${bug.type || 'N/A'}</td>
+                        <td>${bug.module || 'N/A'}</td>
+                        <td>
+                            <button class="details-btn" data-id="${bug.id || ''}" data-name="${bug.name || ''}" data-type="${bug.type || ''}" data-module="${bug.module || ''}" data-priority="${bug.priority || ''}">
+                                Details
+                            </button>
+                        </td>
+                    `;
+
+                    row.querySelector('.details-btn').addEventListener('click', () => {
+                        showBugDetails(bug.id || '', bug.name || '', bug.type || '', bug.module || '', bug.priority || '');
+                    });
+                    bugItems.appendChild(row);
+                });
+            }
+
+            function showBugDetails(id, name, type, module, priority) {
+                bugDetailsText.textContent = `Bug ID: ${id}\nBug Name: "${name}"\nType: ${type}\nModule: ${module}\nPriority: ${priority}`;
+                bugDetailsModal.classList.remove('hidden');
+            }
+
+            async function findBugById(bugId) {
+                try {
+                    const response = await fetch(`${SHEETDB_API_URL}?id=${encodeURIComponent(bugId)}`);
+                    if (!response.ok) throw new Error('Failed to find bug');
+                    const bugs = await response.json();
+                    return bugs.length > 0 ? bugs[0] : null;
+                } catch (error) {
+                    console.error('Error finding bug:', error);
+                    return null;
+                }
+            }
+
+            async function isBugIdUnique(bugId) {
+                if (!bugId) return true; // Allow empty ID for auto-generation
+                try {
+                    const allBugs = await fetchBugs();
+                    const isDuplicate = allBugs.some(bug => bug.id === bugId);
+                    console.log(`Checking ID ${bugId}: Duplicate found = ${isDuplicate}`);
+                    return !isDuplicate;
+                } catch (error) {
+                    console.error('Error checking bug ID uniqueness:', error);
+                    return false; // Fallback to safe mode if fetch fails
+                }
+            }
+
+            async function generateBugId(priority, type, module) {
+                try {
+                    const allBugs = await fetchBugs();
+                    let count = 1;
+                    let newId;
+                    do {
+                        const typePrefix = type === 'HTML/UI' ? 'H' : 'F';
+                        newId = `${priority}-${typePrefix}-${module.toUpperCase()}-${count}`;
+                        count++;
+                    } while (allBugs.some(bug => bug.id === newId));
+                    console.log('Generated ID:', newId);
+                    return newId;
+                } catch (error) {
+                    console.error('Error generating Bug ID:', error);
+                    return `${priority}-${type === 'HTML/UI' ? 'H' : 'F'}-${module.toUpperCase()}-1`;
+                }
+            }
+
+            addBugBtn.addEventListener('click', () => {
+                addBugForm.reset();
+                addBugError.style.display = 'none';
+                addBugModal.classList.remove('hidden');
+            });
+
+            editBugBtn.addEventListener('click', () => {
+                editBugForm.reset();
+                editBugError.style.display = 'none';
+                editBugModal.classList.remove('hidden');
+            });
+
+            deleteBugsBtn.addEventListener('click', () => {
+                deleteBugsForm.reset();
+                deleteBugsError.style.display = 'none';
+                document.getElementById('deleteModuleSelect').disabled = true;
+                document.getElementById('deletePrioritySelect').disabled = true;
+                deleteBugsModal.classList.remove('hidden');
+            });
+
+            addBugForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                showLoader();
+
+                try {
+                    const bugId = document.getElementById('bugId').value.trim();
+                    const bugName = document.getElementById('bugName').value.trim();
+                    const priority = document.getElementById('bugPriority').value;
+                    const type = document.getElementById('bugType').value;
+                    const module = document.getElementById('bugModule').value;
+
+                    if (!bugName) {
+                        throw new Error('Bug name is required');
+                    }
+
+                    let finalBugId = bugId;
+                    if (!finalBugId) {
+                        finalBugId = await generateBugId(priority, type, module);
+                    } else if (!(await isBugIdUnique(bugId))) {
+                        throw new Error('Bug ID already exists');
+                    }
+
+                    // Format data according to SheetDB requirements
+                    const formData = {
+                        data: [
+                            {
+                                "Bug ID": finalBugId,
+                                "Bug Name": bugName,
+                                "Priority": priority,
+                                "Type": type,
+                                "Module": module
+                            }
+                        ]
+                    };
+
+                    console.log('Sending data to API:', formData);
+
+                    const response = await fetch(SHEETDB_API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const responseData = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${responseData.error || response.statusText}`);
+                    }
+
+                    console.log('API Response:', responseData);
+
+                    // Clear form and close modal on success
+                    addBugForm.reset();
+                    addBugModal.classList.add('hidden');
+                    
+                    // Refresh bug list
+                    const bugs = await fetchBugs();
+                    updateBugList(bugs);
+
+                } catch (error) {
+                    console.error('Error details:', error);
+                    addBugError.textContent = error.message;
+                    addBugError.style.display = 'block';
+                } finally {
+                    hideLoader();
+                }
+            });
+
+            editBugForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                showLoader();
+
+                const bugId = document.getElementById('editBugSearch').value.trim();
+                const newName = document.getElementById('editBugName').value.trim();
+                const newPriority = document.getElementById('editBugPriority').value;
+                const newType = document.getElementById('editBugType').value;
+                const newModule = document.getElementById('editBugModule').value;
+
+                if (!bugId || !newName) {
+                    editBugError.textContent = 'Bug ID and name are required';
+                    editBugError.style.display = 'block';
+                    hideLoader();
+                    return;
+                }
+
+                const existingBug = await findBugById(bugId);
+                if (!existingBug) {
+                    editBugError.textContent = 'Bug not found';
+                    editBugError.style.display = 'block';
+                    hideLoader();
+                    return;
+                }
+
+                try {
+                    await fetch(SHEETDB_API_URL, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            search: { id: bugId }
+                        })
+                    });
+
+                    const response = await fetch(SHEETDB_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            data: [{
+                                id: bugId,
+                                name: newName,
+                                priority: newPriority,
+                                type: newType,
+                                module: newModule
+                            }]
+                        })
+                    });
+
+                    if (!response.ok) throw new Error('Failed to update bug');
+
+                    editBugModal.classList.add('hidden');
+                    const bugs = await fetchBugs();
+                    updateBugList(bugs);
+                } catch (error) {
+                    editBugError.textContent = 'Error updating bug: ' + error.message;
+                    editBugError.style.display = 'block';
+                } finally {
+                    hideLoader();
+                }
+            });
+
+            deleteBugsForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                showLoader();
+
+                const deleteType = document.querySelector('input[name="deleteType"]:checked')?.value;
+                const module = document.getElementById('deleteModuleSelect').value;
+                const priority = document.getElementById('deletePrioritySelect').value;
+
+                if (!deleteType || (deleteType === 'module' && !module) || (deleteType === 'priority' && !priority)) {
+                    deleteBugsError.textContent = 'Please select a valid deletion option';
+                    deleteBugsError.style.display = 'block';
+                    hideLoader();
+                    return;
+                }
+
+                try {
+                    const searchParams = deleteType === 'module' ? { module } : { priority };
+                    const response = await fetch(SHEETDB_API_URL, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ search: searchParams })
+                    });
+
+                    if (!response.ok) throw new Error('Failed to delete bugs');
+
+                    deleteBugsModal.classList.add('hidden');
+                    const bugs = await fetchBugs();
+                    updateBugList(bugs);
+                } catch (error) {
+                    deleteBugsError.textContent = 'Error deleting bugs: ' + error.message;
+                    deleteBugsError.style.display = 'block';
+                } finally {
+                    hideLoader();
+                }
+            });
+
+            document.getElementById('deleteByModule').addEventListener('change', function() {
+                document.getElementById('deleteModuleSelect').disabled = false;
+                document.getElementById('deletePrioritySelect').disabled = true;
+            });
+
+            document.getElementById('deleteByPriority').addEventListener('change', function() {
+                document.getElementById('deleteModuleSelect').disabled = true;
+                document.getElementById('deletePrioritySelect').disabled = false;
+            });
+
+            searchInput.addEventListener('input', async function() {
+                const searchTerm = this.value.trim().toLowerCase();
+                
+                if (!searchTerm) {
+                    const bugs = await fetchBugs();
+                    updateBugList(bugs);
+                    return;
+                }
+
+                showLoader();
+                try {
+                    const bugs = await fetchBugs();
+                    const matchingBug = bugs.find(bug => bug.id.toLowerCase() === searchTerm);
+
+                    if (matchingBug) {
+                        document.querySelectorAll('.priority-item').forEach(item => {
+                            item.classList.toggle('active', item.getAttribute('data-priority') === matchingBug.priority);
+                        });
+
+                        document.querySelectorAll('.module-item').forEach(item => {
+                            item.classList.toggle('active', item.getAttribute('data-module') === matchingBug.module);
+                        });
+
+                        currentPriority = matchingBug.priority;
+                        currentModule = matchingBug.module;
+                        currentBugType = matchingBug.type;
+
+                        document.querySelectorAll('.bug-type-btn').forEach(btn => {
+                            const type = btn.getAttribute('data-type');
+                            btn.classList.toggle('active', type === matchingBug.type || type === 'all');
+                        });
+
+                        showBugDetails(matchingBug.id, matchingBug.name, matchingBug.type, matchingBug.module, matchingBug.priority);
+                        updateBugList([matchingBug]);
+                    } else {
+                        const filteredBugs = bugs.filter(bug => bug.id.toLowerCase().includes(searchTerm));
+                        updateBugList(filteredBugs);
+                    }
+                } catch (error) {
+                    console.error('Error during search:', error);
+                } finally {
+                    hideLoader();
+                }
+            });
+
+            document.querySelectorAll('.module-item').forEach(item => {
+                item.addEventListener('click', async function() {
+                    document.querySelectorAll('.module-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    currentModule = this.getAttribute('data-module');
+                    showLoader();
+                    const bugs = await fetchBugs();
+                    updateBugList(bugs);
+                });
+            });
+
+            document.querySelectorAll('.priority-item').forEach(item => {
+                item.addEventListener('click', async function() {
+                    document.querySelectorAll('.priority-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    currentPriority = this.getAttribute('data-priority');
+                    showLoader();
+                    const bugs = await fetchBugs();
+                    updateBugList(bugs);
+                });
+            });
+
+            document.querySelectorAll('.bug-type-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    document.querySelectorAll('.bug-type-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentBugType = this.getAttribute('data-type');
+                    showLoader();
+                    const bugs = await fetchBugs();
+                    updateBugList(bugs);
+                });
+            });
+
+            closeBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    bugDetailsModal.classList.add('hidden');
+                    addBugModal.classList.add('hidden');
+                    editBugModal.classList.add('hidden');
+                    deleteBugsModal.classList.add('hidden');
+                });
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === bugDetailsModal) bugDetailsModal.classList.add('hidden');
+                if (event.target === addBugModal) addBugModal.classList.add('hidden');
+                if (event.target === editBugModal) editBugModal.classList.add('hidden');
+                if (event.target === deleteBugsModal) deleteBugsModal.classList.add('hidden');
+            });
+
+            async function init() {
+                showLoader();
+                const bugs = await fetchBugs();
+                updateBugList(bugs);
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>
