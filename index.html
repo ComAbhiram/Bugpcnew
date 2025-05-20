@@ -1403,366 +1403,409 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const SHEETDB_API_URL = 'https://sheetdb.io/api/v1/lvcb5klydqpz3'; // Replace with your actual SheetDB API URL
-            const PASSWORD = 'Abhihere'; // Password for protected actions
+    document.addEventListener('DOMContentLoaded', function() {
+        const SHEETDB_API_URL = 'https://sheetdb.io/api/v1/lvcb5klydqpz3'; // Replace with your actual SheetDB API URL
+        const PASSWORD = 'Abhihere'; // Password for protected actions
 
-            const bugItems = document.getElementById('bugItems');
-            const bugDetailsModal = document.getElementById('bugDetailsModal');
-            const bugDetailsText = document.getElementById('bugDetailsText');
-            const addBugModal = document.getElementById('addBugModal');
-            const editBugModal = document.getElementById('editBugModal');
-            const deleteBugsModal = document.getElementById('deleteBugsModal');
-            const addBugForm = document.getElementById('addBugForm');
-            const editBugForm = document.getElementById('editBugForm');
-            const deleteBugsForm = document.getElementById('deleteBugsForm');
-            const addBugBtn = document.getElementById('addBugBtn');
-            const editBugBtn = document.getElementById('editBugBtn');
-            const deleteBugsBtn = document.getElementById('deleteBugsBtn');
-            const closeBtns = document.querySelectorAll('.close-btn');
-            const searchInput = document.getElementById('bugIdSearch');
-            const loader = document.querySelector('.loader-container');
-            const addBugError = document.getElementById('addBugError');
-            const editBugError = document.getElementById('editBugError');
-            const deleteBugsError = document.getElementById('deleteBugsError');
-            const menuToggle = document.querySelector('.menu-toggle');
-            const sidebar = document.querySelector('.sidebar');
+        const bugItems = document.getElementById('bugItems');
+        const bugDetailsModal = document.getElementById('bugDetailsModal');
+        const bugDetailsText = document.getElementById('bugDetailsText');
+        const addBugModal = document.getElementById('addBugModal');
+        const editBugModal = document.getElementById('editBugModal');
+        const deleteBugsModal = document.getElementById('deleteBugsModal');
+        const addBugForm = document.getElementById('addBugForm');
+        const editBugForm = document.getElementById('editBugForm');
+        const deleteBugsForm = document.getElementById('deleteBugsForm');
+        const addBugBtn = document.getElementById('addBugBtn');
+        const editBugBtn = document.getElementById('editBugBtn');
+        const deleteBugsBtn = document.getElementById('deleteBugsBtn');
+        const closeBtns = document.querySelectorAll('.close-btn');
+        const searchInput = document.getElementById('bugIdSearch');
+        const loader = document.querySelector('.loader-container');
+        const addBugError = document.getElementById('addBugError');
+        const editBugError = document.getElementById('editBugError');
+        const deleteBugsError = document.getElementById('deleteBugsError');
+        const menuToggle = document.querySelector('.menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
 
-            let currentPriority = 'all';
-            let currentBugType = 'all';
-            let currentModule = 'all';
+        let currentPriority = 'all';
+        let currentBugType = 'all';
+        let currentModule = 'all';
 
-            function showLoader() {
-                loader.classList.add('show');
-            }
+        function showLoader() {
+            loader.classList.add('show');
+        }
 
-            function hideLoader() {
-                loader.classList.remove('show');
-            }
+        function hideLoader() {
+            loader.classList.remove('show');
+        }
 
-            async function fetchBugs() {
-                try {
-                    showLoader();
-                    const response = await fetch(SHEETDB_API_URL);
-                    if (!response.ok) throw new Error('Failed to fetch bugs');
-                    const data = await response.json();
-                    
-                    // Transform the data to match our internal format
-                    return data.map(item => ({
-                        id: item["Bug ID"],
-                        name: item["Bug Name"],
-                        priority: item["Priority"],
-                        type: item["Type"],
-                        module: item["Module"]
-                    }));
-                } catch (error) {
-                    console.error('Error fetching bugs:', error);
-                    return [];
-                } finally {
-                    hideLoader();
-                }
-            }
-
-            function updateBugList(bugs) {
-                bugItems.innerHTML = '';
-                const filteredBugs = bugs.filter(bug => {
-                    const matchesPriority = currentPriority === 'all' || bug.priority === currentPriority;
-                    const matchesType = currentBugType === 'all' || bug.type === currentBugType;
-                    const matchesModule = currentModule === 'all' || bug.module.toLowerCase() === currentModule.toLowerCase();
-                    return matchesPriority && matchesType && matchesModule;
-                });
-
-                if (filteredBugs.length === 0) {
-                    bugItems.innerHTML = '<tr><td colspan="5" class="no-bugs">No bugs found for the selected filters.</td></tr>';
-                    return;
-                }
-
-                filteredBugs.forEach(bug => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${bug.id || 'N/A'}</td>
-                        <td>${bug.name || 'Unnamed'}</td>
-                        <td>${bug.type || 'N/A'}</td>
-                        <td>${bug.module || 'N/A'}</td>
-                        <td>
-                            <button class="details-btn" data-id="${bug.id || ''}" data-name="${bug.name || ''}" data-type="${bug.type || ''}" data-module="${bug.module || ''}" data-priority="${bug.priority || ''}">
-                                Details
-                            </button>
-                        </td>
-                    `;
-
-                    row.querySelector('.details-btn').addEventListener('click', () => {
-                        showBugDetails(bug.id || '', bug.name || '', bug.type || '', bug.module || '', bug.priority || '');
-                    });
-                    bugItems.appendChild(row);
-                });
-            }
-
-            function showBugDetails(id, name, type, module, priority) {
-                bugDetailsText.textContent = `Bug ID: ${id}\nBug Name: "${name}"\nType: ${type}\nModule: ${module}\nPriority: ${priority}`;
-                bugDetailsModal.classList.remove('hidden');
-            }
-
-            async function findBugById(bugId) {
-                try {
-                    const response = await fetch(`${SHEETDB_API_URL}/search?Bug%20ID=${encodeURIComponent(bugId)}`);
-                    if (!response.ok) throw new Error('Failed to find bug');
-                    const bugs = await response.json();
-                    return bugs.length > 0 ? bugs[0] : null;
-                } catch (error) {
-                    console.error('Error finding bug:', error);
-                    return null;
-                }
-            }
-
-            async function isBugIdUnique(bugId) {
-                if (!bugId) return true; // Allow empty ID for auto-generation
-                try {
-                    const allBugs = await fetchBugs();
-                    const isDuplicate = allBugs.some(bug => bug.id === bugId);
-                    console.log(`Checking ID ${bugId}: Duplicate found = ${isDuplicate}`);
-                    return !isDuplicate;
-                } catch (error) {
-                    console.error('Error checking bug ID uniqueness:', error);
-                    return false; // Fallback to safe mode if fetch fails
-                }
-            }
-
-            async function generateBugId(priority, type, module) {
-                try {
-                    const allBugs = await fetchBugs();
-                    let count = 1;
-                    let newId;
-                    do {
-                        const typePrefix = type === 'HTML/UI' ? 'H' : 'F';
-                        newId = `${priority}-${typePrefix}-${module.toUpperCase()}-${count}`;
-                        count++;
-                    } while (allBugs.some(bug => bug.id === newId));
-                    console.log('Generated ID:', newId);
-                    return newId;
-                } catch (error) {
-                    console.error('Error generating Bug ID:', error);
-                    return `${priority}-${type === 'HTML/UI' ? 'H' : 'F'}-${module.toUpperCase()}-1`;
-                }
-            }
-
-            addBugBtn.addEventListener('click', () => {
-                const enteredPassword = prompt('Please enter the password:');
-                if (enteredPassword === PASSWORD) {
-                    addBugForm.reset();
-                    addBugError.style.display = 'none';
-                    addBugModal.classList.remove('hidden');
-                } else {
-                    alert('Incorrect password. Access denied.');
-                }
-            });
-
-            editBugBtn.addEventListener('click', () => {
-                const enteredPassword = prompt('Please enter the password:');
-                if (enteredPassword === PASSWORD) {
-                    editBugForm.reset();
-                    editBugError.style.display = 'none';
-                    editBugModal.classList.remove('hidden');
-                } else {
-                    alert('Incorrect password. Access denied.');
-                }
-            });
-
-            deleteBugsBtn.addEventListener('click', () => {
-                const enteredPassword = prompt('Please enter the password:');
-                if (enteredPassword === PASSWORD) {
-                    deleteBugsForm.reset();
-                    deleteBugsError.style.display = 'none';
-                    document.getElementById('deleteModuleSelect').disabled = true;
-                    document.getElementById('deletePrioritySelect').disabled = true;
-                    deleteBugsModal.classList.remove('hidden');
-                } else {
-                    alert('Incorrect password. Access denied.');
-                }
-            });
-
-            addBugForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
+        async function fetchBugs() {
+            try {
                 showLoader();
-
-                try {
-                    const bugId = document.getElementById('bugId').value.trim();
-                    const bugName = document.getElementById('bugName').value.trim();
-                    const priority = document.getElementById('bugPriority').value;
-                    const type = document.getElementById('bugType').value;
-                    const module = document.getElementById('bugModule').value;
-
-                    if (!bugName) {
-                        throw new Error('Bug name is required');
-                    }
-
-                    let finalBugId = bugId;
-                    if (!finalBugId) {
-                        finalBugId = await generateBugId(priority, type, module);
-                    } else if (!(await isBugIdUnique(bugId))) {
-                        throw new Error('Bug ID already exists');
-                    }
-
-                    // Format data according to SheetDB requirements
-                    const formData = {
-                        data: [
-                            {
-                                "Bug ID": finalBugId,
-                                "Bug Name": bugName,
-                                "Priority": priority,
-                                "Type": type,
-                                "Module": module
-                            }
-                        ]
-                    };
-
-                    console.log('Sending data to API:', formData);
-
-                    const response = await fetch(SHEETDB_API_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify(formData)
-                    });
-
-                    const responseData = await response.json();
-                    
-                    if (!response.ok) {
-                        throw new Error(`API Error: ${responseData.error || response.statusText}`);
-                    }
-
-                    console.log('API Response:', responseData);
-
-                    // Clear form and close modal on success
-                    addBugForm.reset();
-                    addBugModal.classList.add('hidden');
-                    
-                    // Refresh bug list
-                    const bugs = await fetchBugs();
-                    updateBugList(bugs);
-
-                } catch (error) {
-                    console.error('Error details:', error);
-                    addBugError.textContent = error.message;
-                    addBugError.style.display = 'block';
-                } finally {
-                    hideLoader();
-                }
-            });
-
-            editBugForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                showLoader();
-
-                const bugId = document.getElementById('editBugSearch').value.trim();
-                const newName = document.getElementById('editBugName').value.trim();
-                const newPriority = document.getElementById('editBugPriority').value;
-                const newType = document.getElementById('editBugType').value;
-                const newModule = document.getElementById('editBugModule').value;
-
-                if (!bugId || !newName) {
-                    editBugError.textContent = 'Bug ID and name are required';
-                    editBugError.style.display = 'block';
-                    hideLoader();
-                    return;
-                }
-
-                const existingBug = await findBugById(bugId);
-                if (!existingBug) {
-                    editBugError.textContent = 'Bug not found';
-                    editBugError.style.display = 'block';
-                    hideLoader();
-                    return;
-                }
-
-                try {
-                    await fetch(`${SHEETDB_API_URL}/search`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            search: { "Bug ID": bugId }
-                        })
-                    });
-
-                    const response = await fetch(SHEETDB_API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            data: [{
-                                "Bug ID": bugId,
-                                "Bug Name": newName,
-                                "Priority": newPriority,
-                                "Type": newType,
-                                "Module": newModule
-                            }]
-                        })
-                    });
-
-                    if (!response.ok) throw new Error('Failed to update bug');
-
-                    editBugModal.classList.add('hidden');
-                    const bugs = await fetchBugs();
-                    updateBugList(bugs);
-                } catch (error) {
-                    editBugError.textContent = 'Error updating bug: ' + error.message;
-                    editBugError.style.display = 'block';
-                } finally {
-                    hideLoader();
-                }
-            });
-
-            deleteBugsForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                showLoader();
-
-                const deleteType = document.querySelector('input[name="deleteType"]:checked')?.value;
-                const module = document.getElementById('deleteModuleSelect').value;
-                const priority = document.getElementById('deletePrioritySelect').value;
-
-                if (!deleteType || (deleteType === 'module' && !module) || (deleteType === 'priority' && !priority)) {
-                    deleteBugsError.textContent = 'Please select a valid deletion option';
-                    deleteBugsError.style.display = 'block';
-                    hideLoader();
-                    return;
-                }
-
-                try {
-                    const searchParams = deleteType === 'module' ? { Module: module } : { Priority: priority };
-                    const response = await fetch(`${SHEETDB_API_URL}/search`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ search: searchParams })
-                    });
-
-                    if (!response.ok) throw new Error('Failed to delete bugs');
-
-                    deleteBugsModal.classList.add('hidden');
-                    const bugs = await fetchBugs();
-                    updateBugList(bugs);
-                } catch (error) {
-                    deleteBugsError.textContent = 'Error deleting bugs: ' + error.message;
-                    deleteBugsError.style.display = 'block';
-                } finally {
-                    hideLoader();
-                }
-            });
-
-            document.getElementById('deleteByModule').addEventListener('change', function() {
-                document.getElementById('deleteModuleSelect').disabled = false;
-                document.getElementById('deletePrioritySelect').disabled = true;
-            });
-
-            document.getElementById('deleteByPriority').addEventListener('change', function() {
-                document.getElementById('deleteModuleSelect').disabled = true;
-                document.getElementById('deletePrioritySelect').disabled = false;
-            });
-
-            searchInput.addEventListener('input', async function() {
-                const searchTerm = this.value.trim().toLowerCase();
+                const response = await fetch(SHEETDB_API_URL);
+                if (!response.ok) throw new Error('Failed to fetch bugs');
+                const data = await response.json();
                 
-                if (!searchTerm) {
+                // Transform and sanitize the data
+                return data.map(item => ({
+                    id: item["Bug ID"] ? String(item["Bug ID"]).trim() : '',
+                    name: item["Bug Name"] ? String(item["Bug Name"]).trim() : 'Unnamed',
+                    priority: item["Priority"] ? String(item["Priority"]).trim() : '',
+                    type: item["Type"] ? String(item["Type"]).trim() : '',
+                    module: item["Module"] ? String(item["Module"]).trim() : ''
+                }));
+            } catch (error) {
+                console.error('Error fetching bugs:', error);
+                return [];
+            } finally {
+                hideLoader();
+            }
+        }
+
+        function updateBugList(bugs, searchTerm = '') {
+            bugItems.innerHTML = '';
+            const filteredBugs = bugs.filter(bug => {
+                const matchesPriority = currentPriority === 'all' || bug.priority === currentPriority;
+                const matchesType = currentBugType === 'all' || bug.type === currentBugType;
+                const matchesModule = currentModule === 'all' || bug.module.toLowerCase() === currentModule.toLowerCase();
+                const matchesSearch = !searchTerm || (bug.id && bug.id.toLowerCase().includes(searchTerm.toLowerCase()));
+                return matchesPriority && matchesType && matchesModule && matchesSearch;
+            });
+
+            if (filteredBugs.length === 0) {
+                bugItems.innerHTML = '<tr><td colspan="5" class="no-bugs">No bugs found for the selected filters or search term.</td></tr>';
+                return;
+            }
+
+            filteredBugs.forEach(bug => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${bug.id || 'N/A'}</td>
+                    <td>${bug.name || 'Unnamed'}</td>
+                    <td>${bug.type || 'N/A'}</td>
+                    <td>${bug.module || 'N/A'}</td>
+                    <td>
+                        <button class="details-btn" data-id="${bug.id || ''}" data-name="${bug.name || ''}" data-type="${bug.type || ''}" data-module="${bug.module || ''}" data-priority="${bug.priority || ''}">
+                            Details
+                        </button>
+                    </td>
+                `;
+
+                row.querySelector('.details-btn').addEventListener('click', () => {
+                    showBugDetails(bug.id || '', bug.name || '', bug.type || '', bug.module || '', bug.priority || '');
+                });
+                bugItems.appendChild(row);
+            });
+        }
+
+        function showBugDetails(id, name, type, module, priority) {
+            bugDetailsText.textContent = `Bug ID: ${id || 'N/A'}\nBug Name: "${name || 'Unnamed'}"\nType: ${type || 'N/A'}\nModule: ${module || 'N/A'}\nPriority: ${priority || 'N/A'}`;
+            bugDetailsModal.classList.remove('hidden');
+        }
+
+        async function findBugById(bugId) {
+            try {
+                const response = await fetch(`${SHEETDB_API_URL}/search?Bug%20ID=${encodeURIComponent(bugId)}`);
+                if (!response.ok) throw new Error('Failed to find bug');
+                const bugs = await response.json();
+                return bugs.length > 0 ? {
+                    id: bugs[0]["Bug ID"] ? String(bugs[0]["Bug ID"]).trim() : '',
+                    name: bugs[0]["Bug Name"] ? String(bugs[0]["Bug Name"]).trim() : 'Unnamed',
+                    priority: bugs[0]["Priority"] ? String(bugs[0]["Priority"]).trim() : '',
+                    type: bugs[0]["Type"] ? String(bugs[0]["Type"]).trim() : '',
+                    module: bugs[0]["Module"] ? String(bugs[0]["Module"]).trim() : ''
+                } : null;
+            } catch (error) {
+                console.error('Error finding bug:', error);
+                return null;
+            }
+        }
+
+        async function isBugIdUnique(bugId) {
+            if (!bugId) return true; // Allow empty ID for auto-generation
+            try {
+                const allBugs = await fetchBugs();
+                const isDuplicate = allBugs.some(bug => bug.id === bugId);
+                console.log(`Checking ID ${bugId}: Duplicate found = ${isDuplicate}`);
+                return !isDuplicate;
+            } catch (error) {
+                console.error('Error checking bug ID uniqueness:', error);
+                return false; // Fallback to safe mode if fetch fails
+            }
+        }
+
+        async function generateBugId(priority, type, module) {
+            try {
+                const allBugs = await fetchBugs();
+                let count = 1;
+                let newId;
+                do {
+                    const typePrefix = type === 'HTML/UI' ? 'H' : 'F';
+                    newId = `${priority}-${typePrefix}-${module.toUpperCase()}-${count}`;
+                    count++;
+                } while (allBugs.some(bug => bug.id === newId));
+                console.log('Generated ID:', newId);
+                return newId;
+            } catch (error) {
+                console.error('Error generating Bug ID:', error);
+                return `${priority}-${type === 'HTML/UI' ? 'H' : 'F'}-${module.toUpperCase()}-1`;
+            }
+        }
+
+        addBugBtn.addEventListener('click', () => {
+            const enteredPassword = prompt('Please enter the password:');
+            if (enteredPassword === PASSWORD) {
+                addBugForm.reset();
+                addBugError.style.display = 'none';
+                addBugModal.classList.remove('hidden');
+            } else {
+                alert('Incorrect password. Access denied.');
+            }
+        });
+
+        editBugBtn.addEventListener('click', () => {
+            const enteredPassword = prompt('Please enter the password:');
+            if (enteredPassword === PASSWORD) {
+                editBugForm.reset();
+                editBugError.style.display = 'none';
+                editBugModal.classList.remove('hidden');
+            } else {
+                alert('Incorrect password. Access denied.');
+            }
+        });
+
+        deleteBugsBtn.addEventListener('click', () => {
+            const enteredPassword = prompt('Please enter the password:');
+            if (enteredPassword === PASSWORD) {
+                deleteBugsForm.reset();
+                deleteBugsError.style.display = 'none';
+                document.getElementById('deleteModuleSelect').disabled = true;
+                document.getElementById('deletePrioritySelect').disabled = true;
+                deleteBugsModal.classList.remove('hidden');
+            } else {
+                alert('Incorrect password. Access denied.');
+            }
+        });
+
+        addBugForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            showLoader();
+
+            try {
+                const bugId = document.getElementById('bugId').value.trim();
+                const bugName = document.getElementById('bugName').value.trim();
+                const priority = document.getElementById('bugPriority').value;
+                const type = document.getElementById('bugType').value;
+                const module = document.getElementById('bugModule').value;
+
+                if (!bugName) {
+                    throw new Error('Bug name is required');
+                }
+
+                let finalBugId = bugId;
+                if (!finalBugId) {
+                    finalBugId = await generateBugId(priority, type, module);
+                } else if (!(await isBugIdUnique(bugId))) {
+                    throw new Error('Bug ID already exists');
+                }
+
+                const formData = {
+                    data: [
+                        {
+                            "Bug ID": finalBugId,
+                            "Bug Name": bugName,
+                            "Priority": priority,
+                            "Type": type,
+                            "Module": module
+                        }
+                    ]
+                };
+
+                console.log('Sending data to API:', formData);
+
+                const response = await fetch(SHEETDB_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const responseData = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${responseData.error || response.statusText}`);
+                }
+
+                console.log('API Response:', responseData);
+
+                addBugForm.reset();
+                addBugModal.classList.add('hidden');
+                
+                const bugs = await fetchBugs();
+                updateBugList(bugs);
+            } catch (error) {
+                console.error('Error details:', error);
+                addBugError.textContent = error.message;
+                addBugError.style.display = 'block';
+            } finally {
+                hideLoader();
+            }
+        });
+
+        editBugForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            showLoader();
+
+            const bugId = document.getElementById('editBugSearch').value.trim();
+            const newName = document.getElementById('editBugName').value.trim();
+            const newPriority = document.getElementById('editBugPriority').value;
+            const newType = document.getElementById('editBugType').value;
+            const newModule = document.getElementById('editBugModule').value;
+
+            if (!bugId || !newName) {
+                editBugError.textContent = 'Bug ID and name are required';
+                editBugError.style.display = 'block';
+                hideLoader();
+                return;
+            }
+
+            const existingBug = await findBugById(bugId);
+            if (!existingBug) {
+                editBugError.textContent = 'Bug not found';
+                editBugError.style.display = 'block';
+                hideLoader();
+                return;
+            }
+
+            try {
+                await fetch(`${SHEETDB_API_URL}/search`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        search: { "Bug ID": bugId }
+                    })
+                });
+
+                const response = await fetch(SHEETDB_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        data: [{
+                            "Bug ID": bugId,
+                            "Bug Name": newName,
+                            "Priority": newPriority,
+                            "Type": newType,
+                            "Module": newModule
+                        }]
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to update bug');
+
+                editBugModal.classList.add('hidden');
+                const bugs = await fetchBugs();
+                updateBugList(bugs);
+            } catch (error) {
+                editBugError.textContent = 'Error updating bug: ' + error.message;
+                editBugError.style.display = 'block';
+            } finally {
+                hideLoader();
+            }
+        });
+
+        deleteBugsForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            showLoader();
+
+            const deleteType = document.querySelector('input[name="deleteType"]:checked')?.value;
+            const module = document.getElementById('deleteModuleSelect').value;
+            const priority = document.getElementById('deletePrioritySelect').value;
+
+            if (!deleteType || (deleteType === 'module' && !module) || (deleteType === 'priority' && !priority)) {
+                deleteBugsError.textContent = 'Please select a valid deletion option';
+                deleteBugsError.style.display = 'block';
+                hideLoader();
+                return;
+            }
+
+            try {
+                const searchParams = deleteType === 'module' ? { Module: module } : { Priority: priority };
+                const response = await fetch(`${SHEETDB_API_URL}/search`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ search: searchParams })
+                });
+
+                if (!response.ok) throw new Error('Failed to delete bugs');
+
+                deleteBugsModal.classList.add('hidden');
+                const bugs = await fetchBugs();
+                updateBugList(bugs);
+            } catch (error) {
+                deleteBugsError.textContent = 'Error deleting bugs: ' + error.message;
+                deleteBugsError.style.display = 'block';
+            } finally {
+                hideLoader();
+            }
+        });
+
+        document.getElementById('deleteByModule').addEventListener('change', function() {
+            document.getElementById('deleteModuleSelect').disabled = false;
+            document.getElementById('deletePrioritySelect').disabled = true;
+        });
+
+        document.getElementById('deleteByPriority').addEventListener('change', function() {
+            document.getElementById('deleteModuleSelect').disabled = true;
+            document.getElementById('deletePrioritySelect').disabled = false;
+        });
+
+        searchInput.addEventListener('input', async function() {
+            const searchTerm = this.value.trim();
+            
+            if (!searchTerm) {
+                document.querySelectorAll('.priority-item').forEach(item => {
+                    item.classList.toggle('active', item.getAttribute('data-priority') === 'all');
+                });
+                document.querySelectorAll('.module-item').forEach(item => {
+                    item.classList.toggle('active', item.getAttribute('data-module') === 'all');
+                });
+                document.querySelectorAll('.bug-type-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-type') === 'all');
+                });
+                currentPriority = 'all';
+                currentModule = 'all';
+                currentBugType = 'all';
+                const bugs = await fetchBugs();
+                updateBugList(bugs);
+                return;
+            }
+
+            showLoader();
+            try {
+                const bugs = await fetchBugs();
+                const matchingBug = await findBugById(searchTerm);
+
+                if (matchingBug) {
+                    document.querySelectorAll('.priority-item').forEach(item => {
+                        item.classList.toggle('active', item.getAttribute('data-priority') === matchingBug.priority);
+                    });
+                    document.querySelectorAll('.module-item').forEach(item => {
+                        item.classList.toggle('active', item.getAttribute('data-module') === matchingBug.module);
+                    });
+                    document.querySelectorAll('.bug-type-btn').forEach(btn => {
+                        btn.classList.toggle('active', btn.getAttribute('data-type') === matchingBug.type);
+                    });
+
+                    currentPriority = matchingBug.priority;
+                    currentModule = matchingBug.module;
+                    currentBugType = matchingBug.type;
+
+                    showBugDetails(matchingBug.id, matchingBug.name, matchingBug.type, matchingBug.module, matchingBug.priority);
+                    updateBugList([matchingBug]);
+                } else {
                     document.querySelectorAll('.priority-item').forEach(item => {
                         item.classList.toggle('active', item.getAttribute('data-priority') === 'all');
                     });
@@ -1772,121 +1815,84 @@
                     document.querySelectorAll('.bug-type-btn').forEach(btn => {
                         btn.classList.toggle('active', btn.getAttribute('data-type') === 'all');
                     });
+
                     currentPriority = 'all';
                     currentModule = 'all';
                     currentBugType = 'all';
-                    const bugs = await fetchBugs();
-                    updateBugList(bugs);
-                    return;
+
+                    updateBugList(bugs, searchTerm);
                 }
-
-                showLoader();
-                try {
-                    const bugs = await fetchBugs();
-                    const matchingBug = bugs.find(bug => bug.id.toLowerCase() === searchTerm);
-
-                    if (matchingBug) {
-                        document.querySelectorAll('.priority-item').forEach(item => {
-                            item.classList.toggle('active', item.getAttribute('data-priority') === matchingBug.priority);
-                        });
-
-                        document.querySelectorAll('.module-item').forEach(item => {
-                            item.classList.toggle('active', item.getAttribute('data-module') === matchingBug.module);
-                        });
-
-                        currentPriority = matchingBug.priority;
-                        currentModule = matchingBug.module;
-                        currentBugType = matchingBug.type;
-
-                        document.querySelectorAll('.bug-type-btn').forEach(btn => {
-                            const type = btn.getAttribute('data-type');
-                            btn.classList.toggle('active', type === matchingBug.type || type === 'all');
-                        });
-
-                        showBugDetails(matchingBug.id, matchingBug.name, matchingBug.type, matchingBug.module, matchingBug.priority);
-                        updateBugList([matchingBug]);
-                    } else {
-                        document.querySelectorAll('.priority-item').forEach(item => {
-                            item.classList.toggle('active', item.getAttribute('data-priority') === 'all');
-                        });
-                        document.querySelectorAll('.module-item').forEach(item => {
-                            item.classList.toggle('active', item.getAttribute('data-module') === 'all');
-                        });
-                        currentPriority = 'all';
-                        currentModule = 'all';
-                        const filteredBugs = bugs.filter(bug => bug.id.toLowerCase().includes(searchTerm));
-                        updateBugList(filteredBugs);
-                    }
-                } catch (error) {
-                    console.error('Error during search:', error);
-                } finally {
-                    hideLoader();
-                }
-            });
-
-            document.querySelectorAll('.module-item').forEach(item => {
-                item.addEventListener('click', async function() {
-                    document.querySelectorAll('.module-item').forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-                    currentModule = this.getAttribute('data-module');
-                    showLoader();
-                    const bugs = await fetchBugs();
-                    updateBugList(bugs);
-                });
-            });
-
-            document.querySelectorAll('.priority-item').forEach(item => {
-                item.addEventListener('click', async function() {
-                    document.querySelectorAll('.priority-item').forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-                    currentPriority = this.getAttribute('data-priority');
-                    showLoader();
-                    const bugs = await fetchBugs();
-                    updateBugList(bugs);
-                });
-            });
-
-            document.querySelectorAll('.bug-type-btn').forEach(btn => {
-                btn.addEventListener('click', async function() {
-                    document.querySelectorAll('.bug-type-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentBugType = this.getAttribute('data-type');
-                    showLoader();
-                    const bugs = await fetchBugs();
-                    updateBugList(bugs);
-                });
-            });
-
-            closeBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    bugDetailsModal.classList.add('hidden');
-                    addBugModal.classList.add('hidden');
-                    editBugModal.classList.add('hidden');
-                    deleteBugsModal.classList.add('hidden');
-                });
-            });
-
-            menuToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('open');
-            });
-
-            window.addEventListener('click', (event) => {
-                if (event.target === bugDetailsModal) bugDetailsModal.classList.add('hidden');
-                if (event.target === addBugModal) addBugModal.classList.add('hidden');
-                if (event.target === editBugModal) editBugModal.classList.add('hidden');
-                if (event.target === deleteBugsModal) deleteBugsModal.classList.add('hidden');
-            });
-
-            async function init() {
-                showLoader();
-                document.querySelector('.priority-item[data-priority="all"]').classList.add('active');
-                document.querySelector('.module-item[data-module="all"]').classList.add('active');
-                const bugs = await fetchBugs();
-                updateBugList(bugs);
+            } catch (error) {
+                console.error('Error during search:', error);
+                bugItems.innerHTML = '<tr><td colspan="5" class="no-bugs">Error searching bugs. Please try again.</td></tr>';
+            } finally {
+                hideLoader();
             }
-
-            init();
         });
-    </script>
+
+        document.querySelectorAll('.module-item').forEach(item => {
+            item.addEventListener('click', async function() {
+                document.querySelectorAll('.module-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                currentModule = this.getAttribute('data-module');
+                showLoader();
+                const bugs = await fetchBugs();
+                updateBugList(bugs, searchInput.value.trim());
+            });
+        });
+
+        document.querySelectorAll('.priority-item').forEach(item => {
+            item.addEventListener('click', async function() {
+                document.querySelectorAll('.priority-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                currentPriority = this.getAttribute('data-priority');
+                showLoader();
+                const bugs = await fetchBugs();
+                updateBugList(bugs, searchInput.value.trim());
+            });
+        });
+
+        document.querySelectorAll('.bug-type-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                document.querySelectorAll('.bug-type-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentBugType = this.getAttribute('data-type');
+                showLoader();
+                const bugs = await fetchBugs();
+                updateBugList(bugs, searchInput.value.trim());
+            });
+        });
+
+        closeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                bugDetailsModal.classList.add('hidden');
+                addBugModal.classList.add('hidden');
+                editBugModal.classList.add('hidden');
+                deleteBugsModal.classList.add('hidden');
+            });
+        });
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === bugDetailsModal) bugDetailsModal.classList.add('hidden');
+            if (event.target === addBugModal) addBugModal.classList.add('hidden');
+            if (event.target === editBugModal) editBugModal.classList.add('hidden');
+            if (event.target === deleteBugsModal) deleteBugsModal.classList.add('hidden');
+        });
+
+        async function init() {
+            showLoader();
+            document.querySelector('.priority-item[data-priority="all"]').classList.add('active');
+            document.querySelector('.module-item[data-module="all"]').classList.add('active');
+            const bugs = await fetchBugs();
+            updateBugList(bugs);
+        }
+
+        init();
+    });
+</script>
 </body>
 </html>
