@@ -1115,7 +1115,11 @@
     <div class="app-container">
         <div class="sidebar">
             <div class="priority-menu">
-                <div class="priority-item active" data-priority="P0">
+                <div class="priority-item active" data-priority="all">
+                    <i class="fas fa-list"></i>
+                    All Priority
+                </div>
+                <div class="priority-item" data-priority="P0">
                     <i class="fas fa-exclamation-circle"></i>
                     P0 - Critical Impact
                 </div>
@@ -1137,6 +1141,7 @@
                 </div>
             </div>
             <div class="modules-menu">
+                <div class="module-item active" data-module="all">All Modules</div>
                 <div class="module-item" data-module="Login">Login</div>
                 <div class="module-item" data-module="Common">Common</div>
                 <div class="module-item" data-module="Home">Home</div>
@@ -1240,7 +1245,6 @@
                 <select id="bugModule" name="bugModule" required>
                     <option value="Login">Login</option>
                     <option value="Common">Common</option>
-                    
                     <option value="Home">Home</option>
                     <option value="Dashboard">Dashboard</option>
                     <option value="Profile">Profile</option>
@@ -1424,7 +1428,7 @@
             const menuToggle = document.querySelector('.menu-toggle');
             const sidebar = document.querySelector('.sidebar');
 
-            let currentPriority = 'P0';
+            let currentPriority = 'all';
             let currentBugType = 'all';
             let currentModule = 'all';
 
@@ -1461,11 +1465,19 @@
 
             function updateBugList(bugs) {
                 bugItems.innerHTML = '';
-                bugs.forEach(bug => {
-                    if (currentPriority !== 'all' && bug.priority !== currentPriority) return;
-                    if (currentBugType !== 'all' && bug.type !== currentBugType) return;
-                    if (currentModule !== 'all' && bug.module.toLowerCase() !== currentModule.toLowerCase()) return;
+                const filteredBugs = bugs.filter(bug => {
+                    const matchesPriority = currentPriority === 'all' || bug.priority === currentPriority;
+                    const matchesType = currentBugType === 'all' || bug.type === currentBugType;
+                    const matchesModule = currentModule === 'all' || bug.module.toLowerCase() === currentModule.toLowerCase();
+                    return matchesPriority && matchesType && matchesModule;
+                });
 
+                if (filteredBugs.length === 0) {
+                    bugItems.innerHTML = '<tr><td colspan="5" class="no-bugs">No bugs found for the selected filters.</td></tr>';
+                    return;
+                }
+
+                filteredBugs.forEach(bug => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${bug.id || 'N/A'}</td>
@@ -1751,6 +1763,18 @@
                 const searchTerm = this.value.trim().toLowerCase();
                 
                 if (!searchTerm) {
+                    document.querySelectorAll('.priority-item').forEach(item => {
+                        item.classList.toggle('active', item.getAttribute('data-priority') === 'all');
+                    });
+                    document.querySelectorAll('.module-item').forEach(item => {
+                        item.classList.toggle('active', item.getAttribute('data-module') === 'all');
+                    });
+                    document.querySelectorAll('.bug-type-btn').forEach(btn => {
+                        btn.classList.toggle('active', btn.getAttribute('data-type') === 'all');
+                    });
+                    currentPriority = 'all';
+                    currentModule = 'all';
+                    currentBugType = 'all';
                     const bugs = await fetchBugs();
                     updateBugList(bugs);
                     return;
@@ -1782,6 +1806,14 @@
                         showBugDetails(matchingBug.id, matchingBug.name, matchingBug.type, matchingBug.module, matchingBug.priority);
                         updateBugList([matchingBug]);
                     } else {
+                        document.querySelectorAll('.priority-item').forEach(item => {
+                            item.classList.toggle('active', item.getAttribute('data-priority') === 'all');
+                        });
+                        document.querySelectorAll('.module-item').forEach(item => {
+                            item.classList.toggle('active', item.getAttribute('data-module') === 'all');
+                        });
+                        currentPriority = 'all';
+                        currentModule = 'all';
                         const filteredBugs = bugs.filter(bug => bug.id.toLowerCase().includes(searchTerm));
                         updateBugList(filteredBugs);
                     }
@@ -1847,6 +1879,8 @@
 
             async function init() {
                 showLoader();
+                document.querySelector('.priority-item[data-priority="all"]').classList.add('active');
+                document.querySelector('.module-item[data-module="all"]').classList.add('active');
                 const bugs = await fetchBugs();
                 updateBugList(bugs);
             }
